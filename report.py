@@ -15,22 +15,34 @@ class DataFrameTrans(ABC):
         pass
 
 class DataFrameToFile(ABC):
-    def __init__(self, data_frame):
-        self.df = data_frame
-
     @abstractmethod
-    def save_df_to_file(self):
+    def save_df_to_file(self, data_frame: pd.DataFrame, df_stats: pd.DataFrame, df_corr: pd.DataFrame ,source_file: str):
         pass
 
 class DataFramePlot(ABC):
-    def __init__(self, data_frame, common_columns, source_file):
-        self.df = pd.DataFrame(data_frame)
-        self.common_columns = common_columns
-        self.source_file = source_file
-
     @abstractmethod
-    def plot_graph(self):
+    def plot_graph(self, data_frame: pd.DataFrame, common_columns: list, source_file: str):
         pass
+
+class BasicDataFrameToFile(DataFrameToFile):
+    def save_df_to_file(self, data_frame: pd.DataFrame, df_stats: pd.DataFrame, df_corr: pd.DataFrame ,source_file: str):
+        excelWriter = pd.ExcelWriter(f'{source_file[:-5]}_report.xlsx')
+        data_frame.to_excel(excelWriter, sheet_name= 'Temperatures')
+        df_stats.to_excel(excelWriter, sheet_name= 'Temp_statistics')
+        df_corr.to_excel(excelWriter, sheet_name= 'Temp_correlations')
+        excelWriter.save()
+        excelWriter.close()
+
+
+class BasicDataFramePlot(DataFramePlot):
+    def plot_graph(self, data_frame: pd.DataFrame, common_columns: list, source_file: str):
+        common_columns.remove('Time (s)')
+        for _ in common_columns:
+            plt.plot(data_frame.index.values.tolist(), data_frame[_].tolist())
+        plt.savefig(f'{source_file[:-5]}_plot.png')
+        #plt.show()
+
+
 
 
 class Report(ABC):
@@ -46,8 +58,10 @@ class Report(ABC):
 
 
 class TemperatureReport(Report):
-    def __init__(self, path, source_file, pre_selected_columns, sheet_name_):
+    def __init__(self, path, source_file, pre_selected_columns, sheet_name_, plot_obj_method: DataFramePlot, file_save_method: DataFrameToFile):
         super().__init__(path, source_file, pre_selected_columns, sheet_name_)
+        self.plot_obj_method = plot_obj_method
+        self.file_save_method = file_save_method
 
     def generate_report(self):
         data_frame = CreateDataFrame(self.path, self.source_file, self.sheet_name)
@@ -62,11 +76,9 @@ class TemperatureReport(Report):
         self.df_stats = data_trans.df_statistics
         self.df_corr = data_trans.df_correlations
 
-        file_save = BasicDataFrameToFile(self.df, self.df_stats, self.df_corr, self.source_file)
-        file_save.save_df_to_file()
+        self.file_save_method.save_df_to_file(self.df, self.df_stats, self.df_corr, self.source_file)
         
-        plot_obj = BasicDataFramePlot(self.df, self.post_selected_columns, self.source_file)
-        plot_obj.plot_graph()
+        self.plot_obj_method.plot_graph(self.df, self.post_selected_columns, self.source_file)
 
 class FurnanceTempReport(TemperatureReport):
     def generate_report(self):
@@ -95,7 +107,6 @@ class GetCommonColumns:
                 self.pre_selected_columns))
 
 
-
 class BasicDataFrameTrans(DataFrameTrans):
     def __init__(self, data_frame, common_columns):
         super().__init__(data_frame, common_columns)
@@ -106,30 +117,5 @@ class BasicDataFrameTrans(DataFrameTrans):
         self.df_correlations = self.data_frame.corr().round(decimals=2)
 
 
-class BasicDataFrameToFile(DataFrameToFile):
-    def __init__(self, data_frame, df_stats, df_corr ,source_file):
-        super().__init__(data_frame)
-        self.df_statistics = df_stats
-        self.df_correlations = df_corr
-        self.source_file = source_file
-
-    def save_df_to_file(self):
-        excelWriter = pd.ExcelWriter(f'{self.source_file[:-5]}_report.xlsx')
-        self.df.to_excel(excelWriter, sheet_name= 'Temperatures')
-        self.df_statistics.to_excel(excelWriter, sheet_name= 'Temp_statistics')
-        self.df_correlations.to_excel(excelWriter, sheet_name= 'Temp_correlations')
-        excelWriter.save()
-        excelWriter.close()
-
-class BasicDataFramePlot(DataFramePlot):
-    def __init__(self, data_frame, common_columns, source_file):
-        super().__init__(data_frame, common_columns, source_file)
-    
-    def plot_graph(self):
-        self.common_columns.remove('Time (s)')
-        for _ in self.common_columns:
-            plt.plot(self.df.index.values.tolist(), self.df[_].tolist())
-        plt.savefig(f'{self.source_file[:-5]}_plot.png')
-        #plt.show()
 
 
