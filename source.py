@@ -14,15 +14,19 @@ temp_furnance_pre_selected_columns = ['Time (s)', 'Furnace (ºC)', 'Tf0 (ºC)', 
        'Tf3 (ºC)']
 
 def main():
-    example = files_list.SourceFilesList(path)
-    example.files_selector()
-
-    for _ in example.xlsx_files:
-        temp_report = report.TemperatureReport(path, _, temp_pre_selected_columns, sheet_name_, report.BasicDataFramePlot(), report.BasicDataFrameToFile())
-        temp_report.generate_report()
-
+       example = files_list.SourceFilesList(path)
+       example.files_selector()
+       for _ in example.xlsx_files:
+              temp_report = report.TemperatureReport(path,
+                                                     _, 
+                                                     temp_pre_selected_columns, 
+                                                     sheet_name_, report.BasicDataFramePlot(), 
+                                                     report.BasicDataFrameToFile(), 
+                                                     report.BasicDataFrameTrans(), 
+                                                     report.GetCommonColumns())
+              temp_report.generate_report()
+       print(temp_report.__raw_df)
         #temp_furnance_rep = report.FurnanceTempReport(path, _, temp_furnance_pre_selected_columns)
         #temp_furnance_rep.generate_report()
-    
-
+        
 main()
