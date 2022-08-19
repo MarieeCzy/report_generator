@@ -3,6 +3,8 @@ from matplotlib import pyplot as plt
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 import abstract
+import streamlit as st
+import plotly.express as px
 
 
 class GetCommonColumns(abstract.AbstractGetCommonColumns):
@@ -78,6 +80,11 @@ class TemperatureReport(abstract.Report):
         self.__raw_df = CreateDataFrame.get_raw_df(
             self.path, self.source_file, 
             self.sheet_name)
+        fig = px.line(self.__raw_df, x='Time (s)', y='Furnace (ºC)', hover_data=['Time (s)', 'Furnace (ºC)'], title="Raw Data Plot")
+        st.write(fig)
+        fig_all = px.line(self.__raw_df, x='Time (s)', y= self.pre_selected_columns, title="Raw AllData Plot")
+        st.write(fig_all)
+
         
         common_columns = self.post_selected_columns.find_columns_intersection(
             self.__raw_df, 
@@ -94,7 +101,11 @@ class TemperatureReport(abstract.Report):
         self.plot_obj_method.plot_graph(
             self.df, common_columns, 
             self.source_file)
+        
 
+        st.write(self.__raw_df)
+        st.write(self.df)
+       
 
 class FurnanceTempReport(TemperatureReport):
     def generate_report(self):

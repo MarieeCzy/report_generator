@@ -3,10 +3,11 @@ from main_classes import (
        BasicDataFrameToFile, BasicDataFrameTrans, 
        GetCommonColumns)
 import files_list
+import streamlit as st
 
 
-sheet_name_ = 'Sec data'
-path = 'source-files'
+SHEET_NAME_ = 'Sec data'
+PATH = 'source-files'
 temp_pre_selected_columns = [
        'Time (s)', 'Furnace (ºC)', 'Tf0 (ºC)', 'Tf1 (ºC)', 'Tf2 (ºC)',
        'Tf3 (ºC)', 'Ambient (ºC)', 'Orifice (ºC)', 'T1[max] (ºC)', 
@@ -22,12 +23,12 @@ temp_furnance_pre_selected_columns = [
        ]
 
 def main():
-       example = files_list.SourceFilesList(path)
+       example = files_list.SourceFilesList(PATH)
        example.files_selector()
        for _ in example.xlsx_files:
               temp_report = TemperatureReport(
-                     path, _, temp_pre_selected_columns, 
-                     sheet_name_, BasicDataFramePlot(), 
+                     PATH, _, temp_pre_selected_columns, 
+                     SHEET_NAME_, BasicDataFramePlot(), 
                      BasicDataFrameToFile(), 
                      BasicDataFrameTrans(), 
                      GetCommonColumns())
